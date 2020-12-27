@@ -4,12 +4,9 @@ from pyglet.window import key
 import re
 import random
 import math
-import numpy as np
 
 
-WINDOW   = 800
 INCREMENT = 2.0
-
 
 class Game:
     '''
@@ -46,8 +43,6 @@ class Game:
         self.next_active = new_active
 
 class Window(pyglet.window.Window):
-
-   # Cube 3D start rotation
     xRotation = yRotation = 0  
 
     def __init__(self, width, height, title=''):
@@ -176,5 +171,5 @@ class Window(pyglet.window.Window):
 
             
 if __name__ == '__main__':
-    window = Window(WINDOW, WINDOW, 'Game of life tree')
+    window = Window(800, 800, 'Game of life tree')
     pyglet.app.run()
