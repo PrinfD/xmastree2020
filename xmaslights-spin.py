@@ -91,30 +91,32 @@ def xmaslight():
 
     MAX_RGB_VAL = 60
 
-    def get_color(index):
+    def get_color_simple(index):
+        b = int(game.active_coords[index] * MAX_RGB_VAL * (1.0 - delta) + game.next_active[index] * MAX_RGB_VAL * delta)
+        return [b, b, b]
+
+
+    def get_color_with_transition(index):
         if game.active_coords[index]:
             if game.next_active[index]:
                 return [MAX_RGB_VAL, MAX_RGB_VAL, MAX_RGB_VAL]
             else:
-                r = int(MAX_RGB_VAL * (1.0 - delta))
+                red = int(MAX_RGB_VAL * (1.0 - delta))
                 gb = int(MAX_RGB_VAL * (1.0 - delta * 2))
                 if delta > 0.5:
-                    return [r, 0, 0]
+                    return [0, red, 0]
                 else:
-                    return [r, gb, gb]
+                    return [gb, red, gb]
         elif game.next_active[index]:
-            g = int(MAX_RGB_VAL * delta * 2)
+            green = int(MAX_RGB_VAL * delta * 2)
             rb = int(MAX_RGB_VAL * delta)
             if delta > 0.5:
-                return [rb, 60, rb]
+                return [MAX_RGB_VAL, rb, rb]
             else:
-                return [rb, g, rb]
+                return [green, rb, rb]
         else:
-            return [MAX_RGB_VAL // 30, 0, MAX_RGB_VAL // 10]
+            return [0, MAX_RGB_VAL // 30, MAX_RGB_VAL // 10]
 
-    def get_color_simple(index):
-        b = int(game.active_coords[index] * MAX_RGB_VAL * (1.0 - delta) + game.next_active[index] * MAX_RGB_VAL * delta)
-        return [b, b, b]
 
     # yes, I just run which run is true
     run = 1
@@ -123,7 +125,7 @@ def xmaslight():
         
         LED = 0
         while LED < len(coords):
-            pixels[LED] = get_color(LED)
+            pixels[LED] = get_color_with_transition(LED)
             #use next line for a simple transition instead
             #pixels[LED] = get_color_simple(LED)
             LED += 1
