@@ -86,13 +86,13 @@ def xmaslight():
     game = Game(coords, rules, dist_threshhold)
 
     slow = 0
-    delta = 0
-    delta_per_cycle = 0.05 #change this for faster/slower animation
+    transition = 0
+    transition_inc = 0.05 #change this for faster/slower animation
 
     MAX_RGB_VAL = 60
 
     def get_color_simple(index):
-        b = int(game.active_coords[index] * MAX_RGB_VAL * (1.0 - delta) + game.next_active[index] * MAX_RGB_VAL * delta)
+        b = int(game.active_coords[index] * MAX_RGB_VAL * (1.0 - transition) + game.next_active[index] * MAX_RGB_VAL * transition)
         return [b, b, b]
 
 
@@ -101,16 +101,16 @@ def xmaslight():
             if game.next_active[index]:
                 return [MAX_RGB_VAL, MAX_RGB_VAL, MAX_RGB_VAL]
             else:
-                red = int(MAX_RGB_VAL * (1.0 - delta))
-                gb = int(MAX_RGB_VAL * (1.0 - delta * 2))
-                if delta > 0.5:
+                red = int(MAX_RGB_VAL * (1.0 - transition))
+                gb = int(MAX_RGB_VAL * (1.0 - transition * 2))
+                if transition > 0.5:
                     return [0, red, 0]
                 else:
                     return [gb, red, gb]
         elif game.next_active[index]:
-            green = int(MAX_RGB_VAL * delta * 2)
-            rb = int(MAX_RGB_VAL * delta)
-            if delta > 0.5:
+            green = int(MAX_RGB_VAL * transition * 2)
+            rb = int(MAX_RGB_VAL * transition)
+            if transition > 0.5:
                 return [MAX_RGB_VAL, rb, rb]
             else:
                 return [green, rb, rb]
@@ -135,11 +135,11 @@ def xmaslight():
         pixels.show()
         
         # now we get ready for the next cycle
-        delta += delta_per_cycle
+        transition += transition_inc
 
-        if delta > 1.0:
+        if transition > 1.0:
             game.next_life_cycle()
-            delta = 0.0
+            transition = 0.0
         
     return 'DONE'
 
