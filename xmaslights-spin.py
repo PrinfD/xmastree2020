@@ -87,7 +87,7 @@ def xmaslight():
 
     slow = 0
     transition = 0
-    transition_inc = 0.05 #change this for faster/slower animation
+    life_cyclces_per_second = 1.0 #change this for faster/slower animation
 
     MAX_RGB_VAL = 60
 
@@ -120,6 +120,7 @@ def xmaslight():
 
     # yes, I just run which run is true
     run = 1
+    cur_time = time.time()
     while run == 1:
         time.sleep(slow)
         
@@ -135,7 +136,10 @@ def xmaslight():
         pixels.show()
         
         # now we get ready for the next cycle
-        transition += transition_inc
+        new_time = time.time()
+        delta = new_time - cur_time
+        transition += delta * life_cyclces_per_second
+        cur_time = new_time
 
         if transition > 1.0:
             game.next_life_cycle()
