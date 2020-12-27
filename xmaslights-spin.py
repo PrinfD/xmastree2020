@@ -11,7 +11,7 @@ def xmaslight():
     import math
     
     # You are welcome to add any of these:
-    # import random
+    import random
     # import numpy
     # import scipy
     # import sys
@@ -45,60 +45,87 @@ def xmaslight():
     
     # YOU CAN EDIT FROM HERE DOWN
     
-    # I get a list of the heights which is not overly useful here other than to set the max and min altitudes
-    heights = []
-    for i in coords:
-        heights.append(i[2])
+    class Game:
+        '''
+        Parameters:\n
+        coords:
+        *List with 3d coordinates
+        rules:
+        *list with 2 arrays. First array gives the amount of active neighbors for a dead cell to become active. Second array gives the numbers for which an active cell stays active.
+        neighbor_distance_threshhold: 
+        *distance for which a coordinate given in coords counts a neighboring another cell
+        '''
+        def __init__(self, coords, rules, neighbor_distance_threshhold):
+            self._conway_rules = rules
+
+            self._neighbors = []
+            for i in range(len(coords)):
+                distances = {math.dist(coords[i], coords[other]):other for other in range(len(coords)) if other != i}
+                cur_neighbors = [distances[key] for key in sorted(distances.keys()) if key < neighbor_distance_threshhold]
+                self._neighbors.append(cur_neighbors)
+
+            self.active_coords = []
+            self.next_active = [random.random() < 0.25 for _ in coords]
+            self.next_life_cycle()
+
+
+        def _count_active_neighs(self, i):
+            return sum(1 for x in self._neighbors[i] if self.next_active[x])
+
+
+        def next_life_cycle(self):
+            new_active = [self._count_active_neighs(i) in self._conway_rules[self.next_active[i]] for i in range(len(self.next_active))]
+
+            self.active_coords = self.next_active
+            self.next_active = new_active
     
-    min_alt = min(heights)
-    max_alt = max(heights)
-    
-    # VARIOUS SETTINGS
-    
-    # how much the rotation points moves each time
-    dinc = 1
-    
-    # a buffer so it does not hit to extreme top or bottom of the tree
-    buffer = 200
-    
-    # pause between cycles (normally zero as it is already quite slow)
+    #rules for the game. first array gives the number of cells required for a dead cell to become alive
+    #second array gives the number of active cells required for a living cell to stay alive
+    rules = [[3], [2,3]] 
+    dist_threshhold = 100 #distance within another light/cells counts as neighbor
+    game = Game(coords, rules, dist_threshhold)
+
     slow = 0
-    
-    # startin angle (in radians)
-    angle = 0
-    
-    # how much the angle changes per cycle
-    inc = 0.1
-    
-    # the two colours in GRB order
-    # if you are turning a lot of them on at once, keep their brightness down please
-    colourA = [0,50,50] # purple
-    colourB = [50,50,0] # yellow
-    
-    
-    # INITIALISE SOME VALUES
-    
-    swap01 = 0
-    swap02 = 0
-    
-    # direct it move in
-    direction = -1
-    
-    # the starting point on the vertical axis
-    c = 100 
-    
+    delta = 0
+    delta_per_cycle = 0.05 #change this for faster/slower animation
+
+    MAX_RGB_VAL = 60
+
+    def get_color(index):
+        if game.active_coords[index]:
+            if game.next_active[index]:
+                return [MAX_RGB_VAL, MAX_RGB_VAL, MAX_RGB_VAL]
+            else:
+                r = int(MAX_RGB_VAL * (1.0 - delta))
+                gb = int(MAX_RGB_VAL * (1.0 - delta * 2))
+                if delta > 0.5:
+                    return [r, 0, 0]
+                else:
+                    return [r, gb, gb]
+        elif game.next_active[index]:
+            g = int(MAX_RGB_VAL * delta * 2)
+            rb = int(MAX_RGB_VAL * delta)
+            if delta > 0.5:
+                return [rb, 60, rb]
+            else:
+                return [rb, g, rb]
+        else:
+            return [MAX_RGB_VAL // 30, 0, MAX_RGB_VAL // 10]
+
+    def get_color_simple(index):
+        b = int(game.active_coords[index] * MAX_RGB_VAL * (1.0 - delta) + game.next_active[index] * MAX_RGB_VAL * delta)
+        return [b, b, b]
+
     # yes, I just run which run is true
     run = 1
     while run == 1:
-        
         time.sleep(slow)
         
         LED = 0
         while LED < len(coords):
-            if math.tan(angle)*coords[LED][1] <= coords[LED][2]+c:
-                pixels[LED] = colourA
-            else:
-                pixels[LED] = colourB
+            pixels[LED] = get_color(LED)
+            #use next line for a simple transition instead
+            #pixels[LED] = get_color_simple(LED)
             LED += 1
         
         # use the show() option as rarely as possible as it takes ages
@@ -106,36 +133,11 @@ def xmaslight():
         pixels.show()
         
         # now we get ready for the next cycle
-        
-        angle += inc
-        if angle > 2*math.pi:
-            angle -= 2*math.pi
-            swap01 = 0
-            swap02 = 0
-        
-        # this is all to keep track of which colour is 'on top'
-        
-        if angle >= 0.5*math.pi:
-            if swap01 == 0:
-                colour_hold = [i for i in colourA]
-                colourA =[i for i in colourB]
-                colourB = [i for i in colour_hold]
-                swap01 = 1
-                
-        if angle >= 1.5*math.pi:
-            if swap02 == 0:
-                colour_hold = [i for i in colourA]
-                colourA =[i for i in colourB]
-                colourB = [i for i in colour_hold]
-                swap02 = 1
-        
-        # and we move the rotation point
-        c += direction*dinc
-        
-        if c <= min_alt+buffer:
-            direction = 1
-        if c >= max_alt-buffer:
-            direction = -1
+        delta += delta_per_cycle
+
+        if delta > 1.0:
+            game.next_life_cycle()
+            delta = 0.0
         
     return 'DONE'
 
